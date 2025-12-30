@@ -1,0 +1,24 @@
+{
+    "name": "osynapsy/workers",
+    "version": "1.0",
+    "homepage": "http://www.osynapsy.net/workers",
+    "type": "library",
+    "description": "Worker library",
+    "keywords": ["Osynapsy", "Workers library"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pietro Celeste",
+            "email": "p.celeste@osynapsy.net",
+            "homepage": "https://github.com/osynapsy/osynapsy-workers/wiki"
+        }
+    ],
+    "require": {
+        "php" : ">=7.2.0"
+    },
+    "autoload" : {
+        "psr-4": {
+            "Osynapsy\\Workers\\": "src/Osynapsy/Workers"
+        }
+    }
+}
