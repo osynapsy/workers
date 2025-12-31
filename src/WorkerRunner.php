@@ -113,6 +113,7 @@ class WorkerRunner
             $this->repository->complete($job);
         } catch (\Throwable $e) {
             $this->repository->fail($job, $e->getMessage());
+            $this->debug($e->getMessage());
         }
     }
 
