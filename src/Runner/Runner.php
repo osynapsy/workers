@@ -115,26 +115,18 @@ class Runner
     private function executePipelineStep(Pipeline $pipeline): void
     {
         try {
-            $step = $pipeline->getCurrentStep();
-            var_dump($pipeline->getCurrentStepIndex(), sprintf('completed %s' , $pipeline->isCompleted() ? 'true' : 'false'));
-            if ($step === null) {
+            $handlerClass = $pipeline->getCurrentStep();            
+            if ($handlerClass === null) {
                 $this->repository->complete($pipeline);
                 return;
-            }
-
-            $handlerClass = $step;            
+            }             
             (new $handlerClass())->handle($pipeline);
-
-            $pipeline->advance();
-            
-            var_dump($pipeline->getCurrentStepIndex(), sprintf('completed %s' , $pipeline->isCompleted() ? 'true' : 'false'));
-            
+            $pipeline->advance();            
             if ($pipeline->isCompleted()) {
                 $this->repository->complete($pipeline);
             } else {
                 $this->repository->release($pipeline);
             }
-
         } catch (\Throwable $e) {
             $this->repository->fail($pipeline, $e->getMessage());
             $this->debug($e->getMessage());
