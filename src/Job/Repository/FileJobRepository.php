@@ -1,15 +1,21 @@
 <?php
-namespace Osynapsy\Workers\Infrastructure;
+namespace Osynapsy\Workers\Job\Repository;
 
-use Osynapsy\Workers\Job;
+use Osynapsy\Workers\Job\Job;
+use Osynapsy\Workers\Pipeline\Repository\PipelineRepositoryInterface;
 
 class FileJobRepository implements JobRepositoryInterface
 {
     protected string $basePath;
-
-    public function __construct(string $basePath)
+    protected $pipelineRespository;
+    
+    public function __construct(
+        string $basePath,
+        PipelineRepositoryInterface $pipelineRepository
+    )
     {
         $this->basePath = rtrim($basePath, '/');
+        $this->pipelineRespository = $pipelineRepository;
         $this->ensureDirectories();
     }
 
@@ -64,9 +70,41 @@ class FileJobRepository implements JobRepositoryInterface
 
     public function complete(Job $job): void
     {
+        // 1. rimuovo job dalla running
         unlink($this->path('running', $job->id()));
+        // 2. marco il job come done
         file_put_contents($this->path('done', $job->id()), serialize($job));
+        // 3. se NON è associato a una pipeline, fine
+        $payload = $job->payload();
+        if (!isset($payload['pipeline_id'])) {
+            return;
+        }
+        // 4. carico pipeline
+        $pipeline = $this->pipelineRepository->load($payload['pipeline_id']);
+        // 5. avanzo pipeline
+        $pipeline->advance();
+
+        // 6. se completata, salvo e fine
+        if ($pipeline->isCompleted()) {
+            $pipeline->markCompleted();
+            $this->pipelineRepository->save($pipeline);
+            return;
+        }
+
+        // 7. creo il job per lo step successivo
+        $nextStepClass = $pipeline->nextStepClass();
+
+        $nextJob = Job::create(
+            type: $nextStepClass,
+            payload: $payload,
+            maxAttempts: $job->maxAttempts()
+        );
+
+        // 8. persisto pipeline e pusho il nuovo job
+        $this->pipelineRepository->save($pipeline);
+        $this->push($nextJob);
     }
+
 
     public function fail(Job $job, string $reason = null): void
     {

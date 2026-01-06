@@ -1,7 +1,8 @@
 <?php
 namespace Osynapsy\Workers;
 
-use Osynapsy\Workers\Infrastructure\JobRepositoryInterface;
+use Osynapsy\Workers\Job\Repository\JobRepositoryInterface;
+use Osynapsy\Workers\Job\Job;
 
 class WorkerRunner
 {
@@ -12,12 +13,12 @@ class WorkerRunner
 
     public function __construct(
         JobRepositoryInterface $repository,
-        WorkerHandlerInterface $handler,
+        //WorkerHandlerInterface $handler,
         int $maxWorkers = 5,
         int $timeout = 300
     ) {
         $this->repository = $repository;
-        $this->handler = $handler;
+        //$this->handler = $handler;
         $this->maxWorkers = $maxWorkers;
         $this->timeout = $timeout;
     }
@@ -109,7 +110,9 @@ class WorkerRunner
     private function executeJobInChildProcess(Job $job): void
     {
         try {
-            $this->handler->handle($job);
+            //$this->handler->handle($job);
+            $handlerClass = $job->type();
+            (new $handlerClass)->handle($job);
             $this->repository->complete($job);
         } catch (\Throwable $e) {
             $this->repository->fail($job, $e->getMessage());

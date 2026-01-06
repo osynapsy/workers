@@ -1,6 +1,8 @@
 <?php
 namespace Osynapsy\Workers;
 
+use Osynapsy\Workers\Job\Job;
+
 interface WorkerHandlerInterface
 {
     /**

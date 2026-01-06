@@ -1,7 +1,7 @@
 <?php
-namespace Osynapsy\Workers\Infrastructure;
+namespace Osynapsy\Workers\Job\Repository;
 
-use Osynapsy\Workers\Job;
+use Osynapsy\Workers\Job\Job;
 
 interface JobRepositoryInterface
 {

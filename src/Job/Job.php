@@ -1,9 +1,10 @@
 <?php
 
-namespace Osynapsy\Workers;
+namespace Osynapsy\Workers\Job;
 
 use DateTimeImmutable;
 use Ramsey\Uuid\Uuid;
+use Osynapsy\Workers\WorkerHandlerInterface;
 
 class Job
 {
@@ -37,6 +38,21 @@ class Job
         $this->status      = self::STATUS_PENDING;
         $this->maxAttempts = $maxAttempts;
         $this->createdAt   = new DateTimeImmutable();
+        $this->validateType($type);
+    }
+    
+    protected function validateType($type)
+    {
+        if (!class_exists($type)) {
+            throw new \InvalidArgumentException("Job type '{$type}' is not a valid class");
+        }
+        if (!is_subclass_of($type, WorkerHandlerInterface::class)) {
+            throw new \InvalidArgumentException("Job type '{$type}' must implement WorkerHandlerInterface");
+        }
+        $ref = new \ReflectionClass($type);
+        if ($ref->isAbstract()) {
+            throw new \InvalidArgumentException("Job type '{$type}' cannot be abstract");
+        }
     }
 
     /**
