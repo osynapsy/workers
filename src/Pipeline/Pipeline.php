@@ -31,6 +31,11 @@ final class Pipeline implements PipelineInterface
         return $this->context;
     }
 
+    public function payload()
+    {
+        return $this->context;
+    }
+    
     public function getSteps(): array
     {
         return $this->steps;
